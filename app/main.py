@@ -1,23 +1,15 @@
-from fastapi import FastAPI
-from openai import OpenAI
-from pydantic import BaseModel
-from dotenv import load_dotenv
-load_dotenv()
+from fastapi import Depends, FastAPI
 
-client = OpenAI()
+from .routers import index, token
+from .dependencies import get_current_active_user
 
 app = FastAPI()
-
-
-class Message(BaseModel):
-    text: str
+app.include_router(token.router, prefix="/token",
+                   tags=["token"])
+app.include_router(index.router, prefix="/api",
+                   dependencies=[Depends(get_current_active_user)])
 
 
 @app.post("/")
-async def completeChat(message: Message):
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": "You are a helpful assistant."}, {
-            "role": "user", "content": message.text}]
-    )
-    return {"message": response.choices[0].message.content}
+async def completeChat():
+    return {"message": "You are in the house of Terran"}
